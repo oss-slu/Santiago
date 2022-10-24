@@ -17,16 +17,16 @@ class RenderApp(QWidget):
         self.layout.addLayout(self.toolbox)
 
         # Add neuron section of toolbar
-        self.addNeuron = QGridLayout(self)
-        self.addNeuron.addWidget(QLabel("Add Neuron:"), 0, 0)
+        self.addNeuronSection = QGridLayout(self)
+        self.addNeuronSection.addWidget(QLabel("Add Neuron:"), 0, 0)
         self.textInput = QLineEdit("ID")
-        self.addNeuron.addWidget(self.textInput, 1, 0)
+        self.addNeuronSection.addWidget(self.textInput, 1, 0)
         self.addButton = QPushButton("+")
         self.addButton.pressed.connect(self.onAddNeuron)
-        self.addNeuron.addWidget(self.addButton, 1, 1)
+        self.addNeuronSection.addWidget(self.addButton, 1, 1)
         self.colorButton = ColorPicker()
-        self.addNeuron.addWidget(self.colorButton, 0, 1)
-        self.toolbox.addLayout(self.addNeuron)
+        self.addNeuronSection.addWidget(self.colorButton, 0, 1)
+        self.toolbox.addLayout(self.addNeuronSection)
 
         self.graph = Graph3D()
         self.layout.addWidget(self.graph)
