@@ -1,27 +1,35 @@
 import sys
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from controllers.renderapp import RenderApp
+from controllers.Graph3D import Graph3D
 
 
-class MainApp(QTabWidget):
+class MainApp(QMainWindow):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
 
-        self.tab1 = QWidget()
-        self.tab2 = QWidget()
+        self.setWindowTitle("Programm")
+
+        # Creates and adds tab widgets to switch between functions
+        self.tabs = QTabWidget()
+        self.setCentralWidget(self.tabs)
+
+        self.tab1 = Graph3D()
+        self.tab2 = RenderApp()
         self.tab3 = QWidget()
 
-        self.addTab(self.tab1, "GraphApp")
-        self.addTab(self.tab2, "RenderApp")
-        self.addTab(self.tab3, "App3")
+        self.tabs.addTab(self.tab1, "GraphApp")
+        self.tabs.addTab(self.tab2, "RenderApp")
+        self.tabs.addTab(self.tab3, "App3")
 
-        self.setWindowTitle("Main App")
+        self.setWindowTitle("Santiago")
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainApp()
-    window.resize(500, 400)
+    window.resize(900, 600)
     window.show()
     sys.exit(app.exec())
