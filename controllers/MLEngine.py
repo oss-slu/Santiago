@@ -22,22 +22,6 @@ class MLEngine():
         
         return nodeData
 
-    def nodesCordinates(self,neuron):
-        nodes = self.eng.getfield(neuron, 'nodes')
-        posx = self.eng.getfield(nodes,'X')
-        posy = self.eng.getfield(nodes,'Y')
-        posz = self.eng.getfield(nodes,'Z')
-
-        x = []
-        y = []
-        z = []
-
-        for i in range(len(posx)):
-            x.append(posx[i][0])
-            x.append(posy[i][0])
-            x.append(posz[i][0])
-        return [x,y,z]
-
 
     def edgesList(self,neuron,nodesDict):
         edges = self.eng.getfield(neuron, 'edges')

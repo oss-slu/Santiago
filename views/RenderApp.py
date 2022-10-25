@@ -3,7 +3,6 @@ from controllers.Graph3D import Graph3D
 from controllers.colorpicker import ColorPicker
 from pyqt_checkbox_list_widget.checkBoxListWidget import CheckBoxListWidget
 
-
 class RenderApp(QWidget):
     def __init__(self, mlEngine, app):
         super(QWidget, self).__init__()
@@ -38,16 +37,21 @@ class RenderApp(QWidget):
 
 
     def onAddNeuron(self):
-        self.load.setText("Loading")
-        self.app.processEvents()
-        self.neuronList.addItem(self.textInput.text())
+        if not self.textInput.text().isdigit():
+            return
+
         neuronID = int(self.textInput.text())
+        self.load.setText("Adding c" + str(neuronID))
+        self.app.processEvents()
+        self.neuronList.addItem('c' + str(neuronID))
 
         self.textInput.setText("")
         neuron = self.mlEngine.createNeuron(neuronID, 't')
         self.graphNeuron(neuron)
         self.load.setText("")
 
+    def disableButtons(self):
+        self.addButton.setDisabled(True)
 
 
     def graphNeuron(self,neuron):
@@ -62,12 +66,6 @@ class RenderApp(QWidget):
             y.append(y1)
             z.append(z1)
         self.graph.scatterPlot(x,y,z)
-
-        for edge in edges:
-            x = [edge[0][0],edge[1][0]]
-            y = [edge[0][1],edge[1][1]]
-            z = [edge[0][2],edge[1][2]]
-            self.graph.linePlot(x,y,z)
-        self.graph.draw()
+        self.graph.linePlot(edges)
         self.graph.fig.canvas.setFocus()
 
