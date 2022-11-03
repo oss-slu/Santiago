@@ -1,7 +1,11 @@
 from PyQt5.QtWidgets import *
 from controllers.Graph3D import Graph3D
 from controllers.colorpicker import ColorPicker
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
 from pyqt_checkbox_list_widget.checkBoxListWidget import CheckBoxListWidget
+from random import *
 
 class RenderApp(QWidget):
     def __init__(self, mlEngine, app):
@@ -61,11 +65,25 @@ class RenderApp(QWidget):
         y = []
         z = []
         for id in nodes:
-            x1,y1,z1 = nodes[id]
+            x1,y1,z1,area1 = nodes[id]
             x.append(x1)
             y.append(y1)
             z.append(z1)
         self.graph.scatterPlot(x,y,z)
         self.graph.linePlot(edges)
+
+        surface = self.mlEngine.eng.GetSurface(neuron)
+
+        for segment in surface:
+            x = np.asarray(segment[0])
+            y = np.asarray(segment[1])
+            z = np.asarray(segment[2])
+            surf = self.graph.axes.plot_surface(x, y, z, cmap=cm.coolwarm,
+                            linewidth=0, antialiased=False, alpha=0.3)
+
         self.graph.fig.canvas.setFocus()
+        plt.show()
+
+
+
 
