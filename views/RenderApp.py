@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import *
 from controllers.Graph3D import Graph3D
+from controllers.PlotlyGraph import PlotlyGraph
 from controllers.colorpicker import ColorPicker
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,8 +37,8 @@ class RenderApp(QWidget):
 
         self.toolbox.addLayout(self.addNeuronSection)
 
-        self.graph = Graph3D()
-        self.layout.addWidget(self.graph)
+        self.graph = PlotlyGraph()
+        self.layout.addWidget(self.graph.browser)
 
 
     def onAddNeuron(self):
@@ -70,7 +71,12 @@ class RenderApp(QWidget):
             y.append(y1)
             z.append(z1)
         self.graph.scatterPlot(x,y,z)
-        self.graph.linePlot(edges)
+        # self.graph.linePlot(edges)
+
+        for line in edges:
+            a = line[0]
+            b = line[1]
+            self.graph.linePlot([a[0],b[0]],[a[1],b[1]],[a[2],b[2]])
 
         surface = self.mlEngine.eng.GetSurface(neuron)
 
@@ -78,11 +84,12 @@ class RenderApp(QWidget):
             x = np.asarray(segment[0])
             y = np.asarray(segment[1])
             z = np.asarray(segment[2])
-            surf = self.graph.axes.plot_surface(x, y, z, cmap=cm.coolwarm,
-                            linewidth=0, antialiased=False, alpha=0.3)
+            self.graph.surfacePlot(x, y, z)
+            # surf = self.graph.axes.plot_surface(x, y, z, cmap=cm.coolwarm,
+            #                 linewidth=0, antialiased=False, alpha=0.3)
 
-        self.graph.fig.canvas.setFocus()
-        plt.show()
+        # self.graph.fig.canvas.setFocus()
+        self.graph.update()
 
 
 
