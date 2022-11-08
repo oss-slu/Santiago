@@ -1,6 +1,7 @@
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 class Graph3D(FigureCanvasQTAgg):
@@ -13,11 +14,14 @@ class Graph3D(FigureCanvasQTAgg):
         matplotlib.use("Qt5agg")
 
         self.axes=self.fig.add_subplot(111,projection="3d")
+        self.axes.set_xlabel("X")
+        self.axes.set_ylabel("Y")
+        self.axes.set_zlabel("Z")
         self.fig.tight_layout()
     
     def scatterPlot(self,x,y,z):
         self.fig.canvas.setFocus()
-        self.axes.scatter(x,y,z, color='b', marker='o', s=8)
+        self.axes.scatter(x,y,z, color='b', marker='o', s=1)
         self.draw()
 
     def linePlot(self,data):

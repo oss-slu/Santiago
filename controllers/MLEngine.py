@@ -3,6 +3,7 @@ import matlab.engine
 class MLEngine():
     def __init__(self):
         self.eng = matlab.engine.start_matlab()
+        self.eng.addpath('matlab')
 
     def createNeuron(self, cell, type):
         neuron = self.eng.Neuron(cell,type)
@@ -11,14 +12,13 @@ class MLEngine():
     def nodesDictionary(self,neuron):
         nodes = self.eng.getfield(neuron, 'nodes')
         id = self.eng.getfield(nodes,'ID')
-        posx = self.eng.getfield(nodes,'X')
-        posy = self.eng.getfield(nodes,'Y')
-        posz = self.eng.getfield(nodes,'Z')
+        XYZum = self.eng.getfield(nodes,'XYZum')
+        area = self.eng.getfield(nodes,'Radius')
 
         nodeData = {}
-        for i in range(len(posx)):
+        for i in range(len(XYZum)):
             currentid = id[i][0]
-            nodeData[int(currentid)] = (posx[i][0],posy[i][0],posz[i][0]) 
+            nodeData[int(currentid)] = (XYZum[i][0],XYZum[i][1],XYZum[i][2],area[i][0]) 
         
         return nodeData
 
@@ -34,13 +34,15 @@ class MLEngine():
             edgeA = a[i][0]
             edgeB = b[i][0]
 
-            nodeA = nodesDict[edgeA]
-            nodeB = nodesDict[edgeB]
+            nodeA = nodesDict[edgeA][0:3]
+            nodeB = nodesDict[edgeB][0:3]
 
             edgeData.append((nodeA,nodeB))
 
         return edgeData
 
+
+    # def neuronSurface(self,neuron):
 
 #example using MLEngine
 if __name__ == "__main__":
