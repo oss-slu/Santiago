@@ -14,7 +14,7 @@ classdef Santiago < matlab.apps.AppBase
         GraphApp                matlab.ui.container.Tab
         Panel                   matlab.ui.container.Panel
         PlotButtons             matlab.ui.control.Button
-        GraphAppLamp            matlab.ui.control.Lamp
+        Lamp                    matlab.ui.control.Lamp
         SourceLabel             matlab.ui.control.Label
         ShowSurfaceCheckBox     matlab.ui.control.CheckBox
         ShowunfinishedCheckBox  matlab.ui.control.CheckBox
@@ -22,7 +22,9 @@ classdef Santiago < matlab.apps.AppBase
         ShowoffedgesCheckBox    matlab.ui.control.CheckBox
         GraphAppPlot            matlab.ui.control.UIAxes
         RenderAppTab            matlab.ui.container.Tab
-        Tab                     matlab.ui.container.Tab
+        PlotButtons_2           matlab.ui.control.Button
+        RenderLamp              matlab.ui.control.Lamp
+        RenderAppPlot           matlab.ui.control.UIAxes
     end
 
     
@@ -51,7 +53,7 @@ classdef Santiago < matlab.apps.AppBase
 
         % Button pushed function: PlotButtons
         function plot(app, event)
-            app.GraphAppLamp.Color = 'r';
+            app.Lamp.Color = 'r';
             drawnow
             
             for i = 1:height(app.segments.segmentTable)
@@ -86,7 +88,7 @@ classdef Santiago < matlab.apps.AppBase
                     'Tag', num2str(i));
             end
         
-            app.GraphAppLamp.Color = 'g';
+            app.Lamp.Color = 'g';
         end
 
         % Value changed function: ShowSurfaceCheckBox
@@ -110,6 +112,23 @@ classdef Santiago < matlab.apps.AppBase
             app.segments = sbfsem.render.Segment(app.neuron);
             
             app.NeuronLamp.Color = 'g';
+        end
+
+        % Button pushed function: PlotButtons_2
+        function plotNeuron(app, event)
+            app.RenderLamp.Color = 'r';
+          
+            drawnow
+            
+            app.neuron.render('ax', app.RenderAppPlot,...
+             'FaceColor', [1 1 0],...
+            'FaceAlpha', 0.6000);
+            
+             camlight(app.RenderAppPlot, 'headlight')
+            
+            app.RenderLamp.Color = 'g';
+            
+            
         end
     end
 
@@ -180,9 +199,9 @@ classdef Santiago < matlab.apps.AppBase
             app.PlotButtons.Position = [12 53 100 22];
             app.PlotButtons.Text = 'Plot';
 
-            % Create GraphAppLamp
-            app.GraphAppLamp = uilamp(app.Panel);
-            app.GraphAppLamp.Position = [129 54 20 20];
+            % Create Lamp
+            app.Lamp = uilamp(app.Panel);
+            app.Lamp.Position = [129 54 20 20];
 
             % Create SourceLabel
             app.SourceLabel = uilabel(app.Panel);
@@ -225,9 +244,25 @@ classdef Santiago < matlab.apps.AppBase
             app.RenderAppTab = uitab(app.TabGroup);
             app.RenderAppTab.Title = 'RenderApp';
 
-            % Create Tab
-            app.Tab = uitab(app.TabGroup);
-            app.Tab.Title = 'Tab';
+            % Create PlotButtons_2
+            app.PlotButtons_2 = uibutton(app.RenderAppTab, 'push');
+            app.PlotButtons_2.ButtonPushedFcn = createCallbackFcn(app, @plotNeuron, true);
+            app.PlotButtons_2.Position = [32 53 100 22];
+            app.PlotButtons_2.Text = 'Plot';
+
+            % Create RenderLamp
+            app.RenderLamp = uilamp(app.RenderAppTab);
+            app.RenderLamp.Position = [149 54 20 20];
+
+            % Create RenderAppPlot
+            app.RenderAppPlot = uiaxes(app.RenderAppTab);
+            app.RenderAppPlot.View = [20 45];
+            app.RenderAppPlot.Projection = 'perspective';
+            app.RenderAppPlot.PlotBoxAspectRatio = [1.01450447669729 1.00193353653608 1];
+            app.RenderAppPlot.XGrid = 'on';
+            app.RenderAppPlot.YGrid = 'on';
+            app.RenderAppPlot.ZGrid = 'on';
+            app.RenderAppPlot.Position = [200 22 439 415];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
