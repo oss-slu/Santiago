@@ -13,8 +13,8 @@ classdef Santiago < matlab.apps.AppBase
         NeuronLamp              matlab.ui.control.Lamp
         GraphApp                matlab.ui.container.Tab
         Panel                   matlab.ui.container.Panel
-        PlotButtons             matlab.ui.control.Button
-        Lamp                    matlab.ui.control.Lamp
+        GraphAppPlotButton      matlab.ui.control.Button
+        GraphAppLamp            matlab.ui.control.Lamp
         SourceLabel             matlab.ui.control.Label
         ShowSurfaceCheckBox     matlab.ui.control.CheckBox
         ShowunfinishedCheckBox  matlab.ui.control.CheckBox
@@ -22,8 +22,14 @@ classdef Santiago < matlab.apps.AppBase
         ShowoffedgesCheckBox    matlab.ui.control.CheckBox
         GraphAppPlot            matlab.ui.control.UIAxes
         RenderAppTab            matlab.ui.container.Tab
-        PlotButtons_2           matlab.ui.control.Button
+        Panel_2                 matlab.ui.container.Panel
+        RenderPlotButton        matlab.ui.control.Button
         RenderLamp              matlab.ui.control.Lamp
+        ColorButton             matlab.ui.control.Button
+        ColorLamp               matlab.ui.control.Lamp
+        Tree                    matlab.ui.container.Tree
+        CellEditFieldLabel      matlab.ui.control.Label
+        CellEditField           matlab.ui.control.NumericEditField
         RenderAppPlot           matlab.ui.control.UIAxes
     end
 
@@ -49,11 +55,13 @@ classdef Santiago < matlab.apps.AppBase
 
             app.showSurface = true;
             app.GraphAppPlot.Toolbar.Visible = 'off'; 
+            app.RenderAppPlot.Toolbar.Visible = 'off'; 
+            camlight(app.RenderAppPlot, 'headlight')
         end
 
-        % Button pushed function: PlotButtons
+        % Button pushed function: GraphAppPlotButton
         function plot(app, event)
-            app.Lamp.Color = 'r';
+            app.GraphAppLamp.Color = 'r';
             drawnow
             
             for i = 1:height(app.segments.segmentTable)
@@ -88,7 +96,7 @@ classdef Santiago < matlab.apps.AppBase
                     'Tag', num2str(i));
             end
         
-            app.Lamp.Color = 'g';
+            app.GraphAppLamp.Color = 'g';
         end
 
         % Value changed function: ShowSurfaceCheckBox
@@ -114,21 +122,61 @@ classdef Santiago < matlab.apps.AppBase
             app.NeuronLamp.Color = 'g';
         end
 
-        % Button pushed function: PlotButtons_2
+        % Button pushed function: RenderPlotButton
         function plotNeuron(app, event)
             app.RenderLamp.Color = 'r';
-          
             drawnow
+            n = Neuron(app.CellEditField.Value, 't');
+            p = uitreenode(app.Tree,"Text", int2str(app.CellEditField.Value));
+            expand(p)
             
-            app.neuron.render('ax', app.RenderAppPlot,...
-             'FaceColor', [1 1 0],...
+            n.render('ax', app.RenderAppPlot,...
+             'FaceColor', app.ColorLamp.Color,...
             'FaceAlpha', 0.6000);
-            
-             camlight(app.RenderAppPlot, 'headlight')
-            
+        
             app.RenderLamp.Color = 'g';
+        end
+
+        % Button pushed function: ColorButton
+        function ColorButtonPushed(app, event)
+            c = uisetcolor([0.6 0.8 1]);
+            app.ColorLamp.Color = c;
+        end
+
+        % Button down function: UIFigure
+        function UIFigureButtonDown(app, event)
             
+        end
+
+        % Key press function: UIFigure
+        function UIFigureKeyPress(app, event)
+            key = event.Key;
+
+            currentTab = app.TabGroup.SelectedTab.Title;
             
+            if currentTab == "GraphApp"
+                angle = app.GraphAppPlot.View;           
+                if key == "downarrow"
+                    view(app.GraphAppPlot, angle(1), angle(2)+5);
+                elseif key == "uparrow"
+                    view(app.GraphAppPlot, angle(1), angle(2)-5); 
+                elseif key == "rightarrow"
+                    view(app.GraphAppPlot, angle(1)-5, angle(2));    
+                elseif key == "leftarrow"
+                    view(app.GraphAppPlot, angle(1)+5, angle(2));              
+                end     
+            elseif currentTab == "RenderApp"
+                angle = app.RenderAppPlot.View;           
+                if key == "downarrow"
+                    view(app.RenderAppPlot, angle(1), angle(2)+5);
+                elseif key == "uparrow"
+                    view(app.RenderAppPlot, angle(1), angle(2)-5); 
+                elseif key == "rightarrow"
+                    view(app.RenderAppPlot, angle(1)-5, angle(2));    
+                elseif key == "leftarrow"
+                    view(app.RenderAppPlot, angle(1)+5, angle(2));              
+                end     
+            end
         end
     end
 
@@ -142,6 +190,8 @@ classdef Santiago < matlab.apps.AppBase
             app.UIFigure = uifigure('Visible', 'off');
             app.UIFigure.Position = [100 100 640 480];
             app.UIFigure.Name = 'MATLAB App';
+            app.UIFigure.ButtonDownFcn = createCallbackFcn(app, @UIFigureButtonDown, true);
+            app.UIFigure.KeyPressFcn = createCallbackFcn(app, @UIFigureKeyPress, true);
 
             % Create TabGroup
             app.TabGroup = uitabgroup(app.UIFigure);
@@ -193,15 +243,15 @@ classdef Santiago < matlab.apps.AppBase
             app.Panel = uipanel(app.GraphApp);
             app.Panel.Position = [1 0 170 455];
 
-            % Create PlotButtons
-            app.PlotButtons = uibutton(app.Panel, 'push');
-            app.PlotButtons.ButtonPushedFcn = createCallbackFcn(app, @plot, true);
-            app.PlotButtons.Position = [12 53 100 22];
-            app.PlotButtons.Text = 'Plot';
+            % Create GraphAppPlotButton
+            app.GraphAppPlotButton = uibutton(app.Panel, 'push');
+            app.GraphAppPlotButton.ButtonPushedFcn = createCallbackFcn(app, @plot, true);
+            app.GraphAppPlotButton.Position = [12 53 100 22];
+            app.GraphAppPlotButton.Text = 'Plot';
 
-            % Create Lamp
-            app.Lamp = uilamp(app.Panel);
-            app.Lamp.Position = [129 54 20 20];
+            % Create GraphAppLamp
+            app.GraphAppLamp = uilamp(app.Panel);
+            app.GraphAppLamp.Position = [129 54 20 20];
 
             % Create SourceLabel
             app.SourceLabel = uilabel(app.Panel);
@@ -212,7 +262,7 @@ classdef Santiago < matlab.apps.AppBase
             app.ShowSurfaceCheckBox = uicheckbox(app.Panel);
             app.ShowSurfaceCheckBox.ValueChangedFcn = createCallbackFcn(app, @surfaces, true);
             app.ShowSurfaceCheckBox.Text = 'Show Surface';
-            app.ShowSurfaceCheckBox.Position = [15 316 97 22];
+            app.ShowSurfaceCheckBox.Position = [15 312 97 22];
             app.ShowSurfaceCheckBox.Value = true;
 
             % Create ShowunfinishedCheckBox
@@ -228,7 +278,7 @@ classdef Santiago < matlab.apps.AppBase
             % Create ShowoffedgesCheckBox
             app.ShowoffedgesCheckBox = uicheckbox(app.Panel);
             app.ShowoffedgesCheckBox.Text = 'Show off edges';
-            app.ShowoffedgesCheckBox.Position = [15 210 104 22];
+            app.ShowoffedgesCheckBox.Position = [15 218 104 22];
 
             % Create GraphAppPlot
             app.GraphAppPlot = uiaxes(app.GraphApp);
@@ -243,16 +293,45 @@ classdef Santiago < matlab.apps.AppBase
             % Create RenderAppTab
             app.RenderAppTab = uitab(app.TabGroup);
             app.RenderAppTab.Title = 'RenderApp';
+            app.RenderAppTab.BackgroundColor = [1 1 1];
 
-            % Create PlotButtons_2
-            app.PlotButtons_2 = uibutton(app.RenderAppTab, 'push');
-            app.PlotButtons_2.ButtonPushedFcn = createCallbackFcn(app, @plotNeuron, true);
-            app.PlotButtons_2.Position = [32 53 100 22];
-            app.PlotButtons_2.Text = 'Plot';
+            % Create Panel_2
+            app.Panel_2 = uipanel(app.RenderAppTab);
+            app.Panel_2.Position = [1 1 200 454];
+
+            % Create RenderPlotButton
+            app.RenderPlotButton = uibutton(app.RenderAppTab, 'push');
+            app.RenderPlotButton.ButtonPushedFcn = createCallbackFcn(app, @plotNeuron, true);
+            app.RenderPlotButton.Position = [26 53 100 22];
+            app.RenderPlotButton.Text = 'Plot';
 
             % Create RenderLamp
             app.RenderLamp = uilamp(app.RenderAppTab);
-            app.RenderLamp.Position = [149 54 20 20];
+            app.RenderLamp.Position = [143 54 20 20];
+
+            % Create ColorButton
+            app.ColorButton = uibutton(app.RenderAppTab, 'push');
+            app.ColorButton.ButtonPushedFcn = createCallbackFcn(app, @ColorButtonPushed, true);
+            app.ColorButton.Position = [26 94 100 22];
+            app.ColorButton.Text = 'Color';
+
+            % Create ColorLamp
+            app.ColorLamp = uilamp(app.RenderAppTab);
+            app.ColorLamp.Position = [143 95 20 20];
+
+            % Create Tree
+            app.Tree = uitree(app.RenderAppTab);
+            app.Tree.Position = [21 125 150 300];
+
+            % Create CellEditFieldLabel
+            app.CellEditFieldLabel = uilabel(app.RenderAppTab);
+            app.CellEditFieldLabel.HorizontalAlignment = 'right';
+            app.CellEditFieldLabel.Position = [26 12 26 22];
+            app.CellEditFieldLabel.Text = 'Cell';
+
+            % Create CellEditField
+            app.CellEditField = uieditfield(app.RenderAppTab, 'numeric');
+            app.CellEditField.Position = [67 12 100 22];
 
             % Create RenderAppPlot
             app.RenderAppPlot = uiaxes(app.RenderAppTab);
@@ -262,7 +341,7 @@ classdef Santiago < matlab.apps.AppBase
             app.RenderAppPlot.XGrid = 'on';
             app.RenderAppPlot.YGrid = 'on';
             app.RenderAppPlot.ZGrid = 'on';
-            app.RenderAppPlot.Position = [200 22 439 415];
+            app.RenderAppPlot.Position = [210 33 429 381];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
