@@ -23,11 +23,12 @@ classdef Santiago < matlab.apps.AppBase
         GraphAppPlot            matlab.ui.control.UIAxes
         RenderAppTab            matlab.ui.container.Tab
         Panel_2                 matlab.ui.container.Panel
+        PlotsPanel              matlab.ui.container.Panel
+        GridLayout              matlab.ui.container.GridLayout
         RenderPlotButton        matlab.ui.control.Button
         RenderLamp              matlab.ui.control.Lamp
         ColorButton             matlab.ui.control.Button
         ColorLamp               matlab.ui.control.Lamp
-        Tree                    matlab.ui.container.Tree
         CellEditFieldLabel      matlab.ui.control.Label
         CellEditField           matlab.ui.control.NumericEditField
         RenderAppPlot           matlab.ui.control.UIAxes
@@ -44,6 +45,17 @@ classdef Santiago < matlab.apps.AppBase
         dataCursor
         segments
         showSurface
+        row
+    end
+    
+    methods (Access = public)
+        
+        function plotCheckbox(app, event)
+
+            disp(event.Source)
+            disp(event.Source.Tag)
+
+      end
     end
     
 
@@ -54,6 +66,7 @@ classdef Santiago < matlab.apps.AppBase
         function startupFcn(app)
 
             app.showSurface = true;
+            app.row = 1;
             app.GraphAppPlot.Toolbar.Visible = 'off'; 
             app.RenderAppPlot.Toolbar.Visible = 'off'; 
             camlight(app.RenderAppPlot, 'headlight')
@@ -125,10 +138,17 @@ classdef Santiago < matlab.apps.AppBase
         % Button pushed function: RenderPlotButton
         function plotNeuron(app, event)
             app.RenderLamp.Color = 'r';
+            cellID = app.CellEditField.Value;
             drawnow
-            n = Neuron(app.CellEditField.Value, 't');
-            p = uitreenode(app.Tree,"Text", int2str(app.CellEditField.Value));
-            expand(p)
+            n = Neuron(cellID, 't');
+            
+            checkBox = uicheckbox(app.GridLayout, 'Value', 1);
+            checkBox.Text = sprintf("c%d", cellID);
+            checkBox.Layout.Row = app.row;
+            checkBox.ValueChangedFcn = createCallbackFcn(app, @plotCheckbox, true);
+            checkBox.Tag = int2str(cellID);            
+            app.row = app.row + 1;
+          
             
             n.render('ax', app.RenderAppPlot,...
              'FaceColor', app.ColorLamp.Color,...
@@ -299,6 +319,17 @@ classdef Santiago < matlab.apps.AppBase
             app.Panel_2 = uipanel(app.RenderAppTab);
             app.Panel_2.Position = [1 1 200 454];
 
+            % Create PlotsPanel
+            app.PlotsPanel = uipanel(app.Panel_2);
+            app.PlotsPanel.Title = 'Plots';
+            app.PlotsPanel.Position = [15 143 174 277];
+
+            % Create GridLayout
+            app.GridLayout = uigridlayout(app.PlotsPanel);
+            app.GridLayout.ColumnWidth = {'1x'};
+            app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout.BackgroundColor = [1 1 1];
+
             % Create RenderPlotButton
             app.RenderPlotButton = uibutton(app.RenderAppTab, 'push');
             app.RenderPlotButton.ButtonPushedFcn = createCallbackFcn(app, @plotNeuron, true);
@@ -318,10 +349,6 @@ classdef Santiago < matlab.apps.AppBase
             % Create ColorLamp
             app.ColorLamp = uilamp(app.RenderAppTab);
             app.ColorLamp.Position = [143 95 20 20];
-
-            % Create Tree
-            app.Tree = uitree(app.RenderAppTab);
-            app.Tree.Position = [21 125 150 300];
 
             % Create CellEditFieldLabel
             app.CellEditFieldLabel = uilabel(app.RenderAppTab);
