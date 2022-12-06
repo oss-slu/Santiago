@@ -2,36 +2,48 @@ classdef Santiago < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                matlab.ui.Figure
-        TabGroup                matlab.ui.container.TabGroup
-        NeuronTab               matlab.ui.container.Tab
-        SourceDropDownLabel     matlab.ui.control.Label
-        SourceDropDown          matlab.ui.control.DropDown
-        SetNeuronButton         matlab.ui.control.Button
-        CellIDEditFieldLabel    matlab.ui.control.Label
-        CellIDEditField         matlab.ui.control.NumericEditField
-        NeuronLamp              matlab.ui.control.Lamp
-        GraphApp                matlab.ui.container.Tab
-        Panel                   matlab.ui.container.Panel
-        GraphAppPlotButton      matlab.ui.control.Button
-        GraphAppLamp            matlab.ui.control.Lamp
-        SourceLabel             matlab.ui.control.Label
-        ShowSurfaceCheckBox     matlab.ui.control.CheckBox
-        ShowunfinishedCheckBox  matlab.ui.control.CheckBox
-        ShowterminalsCheckBox   matlab.ui.control.CheckBox
-        ShowoffedgesCheckBox    matlab.ui.control.CheckBox
-        GraphAppPlot            matlab.ui.control.UIAxes
-        RenderAppTab            matlab.ui.container.Tab
-        Panel_2                 matlab.ui.container.Panel
-        PlotsPanel              matlab.ui.container.Panel
-        GridLayout              matlab.ui.container.GridLayout
-        RenderPlotButton        matlab.ui.control.Button
-        RenderLamp              matlab.ui.control.Lamp
-        ColorButton             matlab.ui.control.Button
-        ColorLamp               matlab.ui.control.Lamp
-        CellEditFieldLabel      matlab.ui.control.Label
-        CellEditField           matlab.ui.control.NumericEditField
-        RenderAppPlot           matlab.ui.control.UIAxes
+        UIFigure                    matlab.ui.Figure
+        ImportMenu                  matlab.ui.container.Menu
+        ExportMenu                  matlab.ui.container.Menu
+        OpeninnewfigurewindowMenu   matlab.ui.container.Menu
+        ExportasimageMenu           matlab.ui.container.Menu
+        ExportasCOLLADAMenu         matlab.ui.container.Menu
+        SendneuronstoworkspaceMenu  matlab.ui.container.Menu
+        HelpMenu                    matlab.ui.container.Menu
+        KeyboardcontrolsMenu        matlab.ui.container.Menu
+        TabGroup                    matlab.ui.container.TabGroup
+        SourceSelectionTab          matlab.ui.container.Tab
+        GridLayout2                 matlab.ui.container.GridLayout
+        Panel_3                     matlab.ui.container.Panel
+        SetSourceButton             matlab.ui.control.Button
+        SourceDropDown              matlab.ui.control.DropDown
+        SourceDropDownLabel         matlab.ui.control.Label
+        SelectedSourceLabel         matlab.ui.control.Label
+        Label                       matlab.ui.control.Label
+        GraphApp                    matlab.ui.container.Tab
+        Panel                       matlab.ui.container.Panel
+        GraphAppPlotButton          matlab.ui.control.Button
+        GraphAppLamp                matlab.ui.control.Lamp
+        SourceLabel                 matlab.ui.control.Label
+        ShowSurfaceCheckBox         matlab.ui.control.CheckBox
+        ShowunfinishedCheckBox      matlab.ui.control.CheckBox
+        ShowterminalsCheckBox       matlab.ui.control.CheckBox
+        ShowoffedgesCheckBox        matlab.ui.control.CheckBox
+        CellEditField_2Label        matlab.ui.control.Label
+        CellEditField_2             matlab.ui.control.NumericEditField
+        GraphAppPlot                matlab.ui.control.UIAxes
+        RenderAppTab                matlab.ui.container.Tab
+        Panel_2                     matlab.ui.container.Panel
+        PlotsPanel                  matlab.ui.container.Panel
+        GridLayout                  matlab.ui.container.GridLayout
+        SourceLabel_2               matlab.ui.control.Label
+        RenderPlotButton            matlab.ui.control.Button
+        RenderLamp                  matlab.ui.control.Lamp
+        ColorButton                 matlab.ui.control.Button
+        ColorLamp                   matlab.ui.control.Lamp
+        CellEditFieldLabel          matlab.ui.control.Label
+        CellEditField               matlab.ui.control.NumericEditField
+        RenderAppPlot               matlab.ui.control.UIAxes
     end
 
     
@@ -45,6 +57,7 @@ classdef Santiago < matlab.apps.AppBase
         dataCursor
         segments
         showSurface
+        graphPlot
         row
     end
     
@@ -54,6 +67,12 @@ classdef Santiago < matlab.apps.AppBase
 
             disp(event.Source)
             disp(event.Source.Tag)
+            
+            if(event.Source.Value)
+                set(findall(app.RenderAppPlot, 'Type', 'patch'), 'Visible', 'on');
+            else
+                set(findall(app.RenderAppPlot, 'Type', 'patch'), 'Visible', 'off');
+            end
 
       end
     end
@@ -75,7 +94,12 @@ classdef Santiago < matlab.apps.AppBase
         % Button pushed function: GraphAppPlotButton
         function plot(app, event)
             app.GraphAppLamp.Color = 'r';
+            cla(app.GraphAppPlot);
             drawnow
+            
+            app.neuronID = app.CellEditField_2.Value;
+            app.neuron = Neuron(app.neuronID, 't');
+            app.segments = sbfsem.render.Segment(app.neuron);
             
             for i = 1:height(app.segments.segmentTable)
                 
@@ -88,13 +112,13 @@ classdef Santiago < matlab.apps.AppBase
                 Z = repmat(xyz(:, 3), [1, size(Z, 2)]);
                 % The PickableParts setting ensures surfaces are invisible
                 % in datacursormode.
-                s = surf(app.GraphAppPlot, X+xyz(:, 1), Y+xyz(:,2), Z,...
+                app.graphPlot = surf(app.GraphAppPlot, X+xyz(:, 1), Y+xyz(:,2), Z,...
                     'FaceAlpha', 0.3,...`
                     'EdgeColor', 'none',...
                     'PickableParts', 'none',...
                     'Tag', ['s', num2str(i)]);
                 if ~app.showSurface
-                    set(s, 'Visible', 'off');
+                    set(app.graphPlot, 'Visible', 'off');
                 end
                 hold(app.GraphAppPlot, 'on');
             end
@@ -116,23 +140,24 @@ classdef Santiago < matlab.apps.AppBase
         function surfaces(app, event)
             val = app.ShowSurfaceCheckBox.Value;
             app.showSurface = val;
+            
+            if ~app.showSurface
+                    set(app.graphPlot, 'Visible', 'off');
+            else
+                set(app.graphPlot, 'Visible', 'on');
+            end
+            
             drawnow
         end
 
-        % Button pushed function: SetNeuronButton
-        function SetNeuronButtonPushed(app, event)
-            app.NeuronLamp.Color = 'r';
-            drawnow
-            
-            cla(app.GraphAppPlot);
+        % Button pushed function: SetSourceButton
+        function SetSourceButtonPushed(app, event)
+                      
             sourceVal = app.SourceDropDown.Value;
-            app.neuronID = app.CellIDEditField.Value;
             app.SourceLabel.Text = sourceVal;
-            disp(app.neuronID)
-            app.neuron = Neuron(app.neuronID, 't');
-            app.segments = sbfsem.render.Segment(app.neuron);
-            
-            app.NeuronLamp.Color = 'g';
+            app.SourceLabel_2.Text = sourceVal;
+            app.Label.Text = sourceVal;
+
         end
 
         % Button pushed function: RenderPlotButton
@@ -173,9 +198,10 @@ classdef Santiago < matlab.apps.AppBase
             key = event.Key;
 
             currentTab = app.TabGroup.SelectedTab.Title;
-            
+            disp(app.GraphAppPlot.XLim)
             if currentTab == "GraphApp"
-                angle = app.GraphAppPlot.View;           
+                angle = app.GraphAppPlot.View;    
+           
                 if key == "downarrow"
                     view(app.GraphAppPlot, angle(1), angle(2)+5);
                 elseif key == "uparrow"
@@ -183,10 +209,14 @@ classdef Santiago < matlab.apps.AppBase
                 elseif key == "rightarrow"
                     view(app.GraphAppPlot, angle(1)-5, angle(2));    
                 elseif key == "leftarrow"
-                    view(app.GraphAppPlot, angle(1)+5, angle(2));              
+                    view(app.GraphAppPlot, angle(1)+5, angle(2));       
+            
+    
+    
                 end     
             elseif currentTab == "RenderApp"
-                angle = app.RenderAppPlot.View;           
+                angle = app.RenderAppPlot.View;  
+          
                 if key == "downarrow"
                     view(app.RenderAppPlot, angle(1), angle(2)+5);
                 elseif key == "uparrow"
@@ -194,7 +224,8 @@ classdef Santiago < matlab.apps.AppBase
                 elseif key == "rightarrow"
                     view(app.RenderAppPlot, angle(1)-5, angle(2));    
                 elseif key == "leftarrow"
-                    view(app.RenderAppPlot, angle(1)+5, angle(2));              
+                    view(app.RenderAppPlot, angle(1)+5, angle(2));   
+ 
                 end     
             end
         end
@@ -213,46 +244,91 @@ classdef Santiago < matlab.apps.AppBase
             app.UIFigure.ButtonDownFcn = createCallbackFcn(app, @UIFigureButtonDown, true);
             app.UIFigure.KeyPressFcn = createCallbackFcn(app, @UIFigureKeyPress, true);
 
+            % Create ImportMenu
+            app.ImportMenu = uimenu(app.UIFigure);
+            app.ImportMenu.Text = 'Import';
+
+            % Create ExportMenu
+            app.ExportMenu = uimenu(app.UIFigure);
+            app.ExportMenu.Text = 'Export';
+
+            % Create OpeninnewfigurewindowMenu
+            app.OpeninnewfigurewindowMenu = uimenu(app.ExportMenu);
+            app.OpeninnewfigurewindowMenu.Text = 'Open in new figure window';
+
+            % Create ExportasimageMenu
+            app.ExportasimageMenu = uimenu(app.ExportMenu);
+            app.ExportasimageMenu.Text = 'Export as image';
+
+            % Create ExportasCOLLADAMenu
+            app.ExportasCOLLADAMenu = uimenu(app.ExportMenu);
+            app.ExportasCOLLADAMenu.Text = 'Export as COLLADA';
+
+            % Create SendneuronstoworkspaceMenu
+            app.SendneuronstoworkspaceMenu = uimenu(app.ExportMenu);
+            app.SendneuronstoworkspaceMenu.Text = 'Send neurons to workspace';
+
+            % Create HelpMenu
+            app.HelpMenu = uimenu(app.UIFigure);
+            app.HelpMenu.Text = 'Help';
+
+            % Create KeyboardcontrolsMenu
+            app.KeyboardcontrolsMenu = uimenu(app.HelpMenu);
+            app.KeyboardcontrolsMenu.Text = 'Keyboard controls';
+
             % Create TabGroup
             app.TabGroup = uitabgroup(app.UIFigure);
             app.TabGroup.Position = [1 1 640 480];
 
-            % Create NeuronTab
-            app.NeuronTab = uitab(app.TabGroup);
-            app.NeuronTab.Title = 'Neuron';
-            app.NeuronTab.BackgroundColor = [1 1 1];
+            % Create SourceSelectionTab
+            app.SourceSelectionTab = uitab(app.TabGroup);
+            app.SourceSelectionTab.Title = 'Source Selection';
+            app.SourceSelectionTab.BackgroundColor = [1 1 1];
 
-            % Create SourceDropDownLabel
-            app.SourceDropDownLabel = uilabel(app.NeuronTab);
-            app.SourceDropDownLabel.HorizontalAlignment = 'right';
-            app.SourceDropDownLabel.Position = [210 264 43 22];
-            app.SourceDropDownLabel.Text = 'Source';
+            % Create GridLayout2
+            app.GridLayout2 = uigridlayout(app.SourceSelectionTab);
+            app.GridLayout2.ColumnWidth = {'1x', 79, 46, 42, 157, 85, '1x'};
+            app.GridLayout2.RowHeight = {'1x', 78, 22, 73, 22, 81, '1.18x'};
+
+            % Create Panel_3
+            app.Panel_3 = uipanel(app.GridLayout2);
+            app.Panel_3.BackgroundColor = [1 1 1];
+            app.Panel_3.Layout.Row = [2 6];
+            app.Panel_3.Layout.Column = [2 6];
+
+            % Create SetSourceButton
+            app.SetSourceButton = uibutton(app.Panel_3, 'push');
+            app.SetSourceButton.ButtonPushedFcn = createCallbackFcn(app, @SetSourceButtonPushed, true);
+            app.SetSourceButton.Position = [163 163 100 22];
+            app.SetSourceButton.Text = 'Set Source';
 
             % Create SourceDropDown
-            app.SourceDropDown = uidropdown(app.NeuronTab);
+            app.SourceDropDown = uidropdown(app.GridLayout2);
             app.SourceDropDown.Items = {'NeitzInferiorMonkey', 'NeitzNasalMonkey', 'NeitzTemporalMonkey', 'NeitzCped', 'Option 1', 'Option 2'};
-            app.SourceDropDown.Position = [268 264 199 22];
+            app.SourceDropDown.Layout.Row = 3;
+            app.SourceDropDown.Layout.Column = [4 5];
             app.SourceDropDown.Value = 'NeitzInferiorMonkey';
 
-            % Create SetNeuronButton
-            app.SetNeuronButton = uibutton(app.NeuronTab, 'push');
-            app.SetNeuronButton.ButtonPushedFcn = createCallbackFcn(app, @SetNeuronButtonPushed, true);
-            app.SetNeuronButton.Position = [210 179 100 22];
-            app.SetNeuronButton.Text = 'Set Neuron';
+            % Create SourceDropDownLabel
+            app.SourceDropDownLabel = uilabel(app.GridLayout2);
+            app.SourceDropDownLabel.HorizontalAlignment = 'right';
+            app.SourceDropDownLabel.FontWeight = 'bold';
+            app.SourceDropDownLabel.Layout.Row = 3;
+            app.SourceDropDownLabel.Layout.Column = 3;
+            app.SourceDropDownLabel.Text = 'Source';
 
-            % Create CellIDEditFieldLabel
-            app.CellIDEditFieldLabel = uilabel(app.NeuronTab);
-            app.CellIDEditFieldLabel.HorizontalAlignment = 'right';
-            app.CellIDEditFieldLabel.Position = [210 218 42 22];
-            app.CellIDEditFieldLabel.Text = 'Cell ID';
+            % Create SelectedSourceLabel
+            app.SelectedSourceLabel = uilabel(app.GridLayout2);
+            app.SelectedSourceLabel.FontWeight = 'bold';
+            app.SelectedSourceLabel.Layout.Row = 5;
+            app.SelectedSourceLabel.Layout.Column = [3 4];
+            app.SelectedSourceLabel.Text = 'Selected Source:';
 
-            % Create CellIDEditField
-            app.CellIDEditField = uieditfield(app.NeuronTab, 'numeric');
-            app.CellIDEditField.Position = [267 218 100 22];
-
-            % Create NeuronLamp
-            app.NeuronLamp = uilamp(app.NeuronTab);
-            app.NeuronLamp.Position = [329 180 20 20];
+            % Create Label
+            app.Label = uilabel(app.GridLayout2);
+            app.Label.Layout.Row = 5;
+            app.Label.Layout.Column = 5;
+            app.Label.Text = '';
 
             % Create GraphApp
             app.GraphApp = uitab(app.TabGroup);
@@ -261,44 +337,54 @@ classdef Santiago < matlab.apps.AppBase
 
             % Create Panel
             app.Panel = uipanel(app.GraphApp);
-            app.Panel.Position = [1 0 170 455];
+            app.Panel.Position = [1 1 188 454];
 
             % Create GraphAppPlotButton
             app.GraphAppPlotButton = uibutton(app.Panel, 'push');
             app.GraphAppPlotButton.ButtonPushedFcn = createCallbackFcn(app, @plot, true);
-            app.GraphAppPlotButton.Position = [12 53 100 22];
+            app.GraphAppPlotButton.Position = [12 52 100 22];
             app.GraphAppPlotButton.Text = 'Plot';
 
             % Create GraphAppLamp
             app.GraphAppLamp = uilamp(app.Panel);
-            app.GraphAppLamp.Position = [129 54 20 20];
+            app.GraphAppLamp.Position = [129 53 20 20];
 
             % Create SourceLabel
             app.SourceLabel = uilabel(app.Panel);
-            app.SourceLabel.Position = [16 415 137 22];
+            app.SourceLabel.Position = [16 414 137 22];
             app.SourceLabel.Text = 'Source';
 
             % Create ShowSurfaceCheckBox
             app.ShowSurfaceCheckBox = uicheckbox(app.Panel);
             app.ShowSurfaceCheckBox.ValueChangedFcn = createCallbackFcn(app, @surfaces, true);
             app.ShowSurfaceCheckBox.Text = 'Show Surface';
-            app.ShowSurfaceCheckBox.Position = [15 312 97 22];
+            app.ShowSurfaceCheckBox.Position = [15 311 97 22];
             app.ShowSurfaceCheckBox.Value = true;
 
             % Create ShowunfinishedCheckBox
             app.ShowunfinishedCheckBox = uicheckbox(app.Panel);
             app.ShowunfinishedCheckBox.Text = 'Show unfinished';
-            app.ShowunfinishedCheckBox.Position = [15 281 110 22];
+            app.ShowunfinishedCheckBox.Position = [15 280 110 22];
 
             % Create ShowterminalsCheckBox
             app.ShowterminalsCheckBox = uicheckbox(app.Panel);
             app.ShowterminalsCheckBox.Text = 'Show terminals';
-            app.ShowterminalsCheckBox.Position = [15 249 104 22];
+            app.ShowterminalsCheckBox.Position = [15 248 104 22];
 
             % Create ShowoffedgesCheckBox
             app.ShowoffedgesCheckBox = uicheckbox(app.Panel);
             app.ShowoffedgesCheckBox.Text = 'Show off edges';
-            app.ShowoffedgesCheckBox.Position = [15 218 104 22];
+            app.ShowoffedgesCheckBox.Position = [15 217 104 22];
+
+            % Create CellEditField_2Label
+            app.CellEditField_2Label = uilabel(app.Panel);
+            app.CellEditField_2Label.HorizontalAlignment = 'right';
+            app.CellEditField_2Label.Position = [14 93 26 22];
+            app.CellEditField_2Label.Text = 'Cell';
+
+            % Create CellEditField_2
+            app.CellEditField_2 = uieditfield(app.Panel, 'numeric');
+            app.CellEditField_2.Position = [55 93 100 22];
 
             % Create GraphAppPlot
             app.GraphAppPlot = uiaxes(app.GraphApp);
@@ -308,7 +394,7 @@ classdef Santiago < matlab.apps.AppBase
             app.GraphAppPlot.XGrid = 'on';
             app.GraphAppPlot.YGrid = 'on';
             app.GraphAppPlot.ZGrid = 'on';
-            app.GraphAppPlot.Position = [200 22 439 415];
+            app.GraphAppPlot.Position = [189 21 439 415];
 
             % Create RenderAppTab
             app.RenderAppTab = uitab(app.TabGroup);
@@ -322,13 +408,18 @@ classdef Santiago < matlab.apps.AppBase
             % Create PlotsPanel
             app.PlotsPanel = uipanel(app.Panel_2);
             app.PlotsPanel.Title = 'Plots';
-            app.PlotsPanel.Position = [15 143 174 277];
+            app.PlotsPanel.Position = [15 136 174 277];
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.PlotsPanel);
             app.GridLayout.ColumnWidth = {'1x'};
             app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
             app.GridLayout.BackgroundColor = [1 1 1];
+
+            % Create SourceLabel_2
+            app.SourceLabel_2 = uilabel(app.Panel_2);
+            app.SourceLabel_2.Position = [18 423 137 22];
+            app.SourceLabel_2.Text = 'Source';
 
             % Create RenderPlotButton
             app.RenderPlotButton = uibutton(app.RenderAppTab, 'push');
