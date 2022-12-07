@@ -193,10 +193,8 @@ classdef Santiago < matlab.apps.AppBase
 
         % Button pushed function: ColorButton
         function ColorButtonPushed(app, event)
-            f = figure('Renderer', 'painters', 'Position', [-100 -100 0 0]); %create a dummy figure so that uigetfile doesn't minimize our GUI
             c = uisetcolor([0.6 0.8 1]);
             app.ColorLamp.Color = c;
-            delete(f)
         end
 
         % Key press function: UIFigure
