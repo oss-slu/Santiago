@@ -1,6 +1,4 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from views.RenderApp import RenderApp
 from controllers.Graph3D import Graph3D

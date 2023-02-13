@@ -16,7 +16,7 @@ neu = mle.createNeuron(127, 'i')
 print('add to path')
 mle.eng.addpath('C:/Users/murra/Documents/SLU/SLU_OSSC/MATLAB/SBFSEM-tools/+sbfsem/+render/')
 print('hitting cylinder')
-fv = mle.eng.render(neu);
+fv = mle.eng.render(neu)
 fv = mle.eng.allFV(neu)
 
 verts = fv['vertices']
